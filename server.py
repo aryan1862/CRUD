@@ -13,23 +13,18 @@ try:
 except:
     print("ERROR")
 
-@app.route("/users/<id>",methods=["GET"])
+@app.route("/users/find/<id>",methods=["GET"])
 def get_one_user(id):
     try:
-        dbresponse=db.users.find_one({"_id":ObjectId(id)})
-        if dbresponse:
-            return Response(
-                response=jsonify(dbresponse),
-                status=200,
-                mimetype="application/json"
-            )
-        else:
-            return Response(
-                    response=jsonify({"message","NOT FOUND"}),
-                    status=200,
-                    mimetype="application/json"
-            )
-
+        data=db.users.find_one({"_id":ObjectId(id)})
+        if data:
+            data["_id"]=str(data["_id"])
+            return Response(response=json.dumps(data),
+                            status=200,
+                            mimetype="application/json")
+        return Response(response=jsonify({"MESSAGE":"NOT FOUND"}),
+                        status=200,
+                        mimetype="application/json")
     except:
         return Response(
             response=json.dumps({"message":"Doesn't Exist"}),
@@ -58,7 +53,7 @@ def get_user():
 @app.route("/users",methods=["POST"])
 def create_user():
     try:
-        user= {"name":request.form["name"],"lastname":request.form["lastname"]}
+        user= {"name":request.form["name"],"email":request.form["email"],"password":request.form["password"]}
         dbresponse=db.users.insert_one(user)
         print(dbresponse.inserted_id)
         return Response(
@@ -72,7 +67,7 @@ def create_user():
 def update_user(id):
     try:
         dbresponse=db.users.update_one({"_id":ObjectId(id)},
-                                       {"$set":{"name":request.form["name"]}})
+                                       {"$set":{"name":request.form["name"],"email":request.form["email"],"password":request.form["password"]}})
         if dbresponse.modified_count==1:
             return Response(
                 response=json.dumps({"message":"User Updated"}),
